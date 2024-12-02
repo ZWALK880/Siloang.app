@@ -23,7 +23,7 @@ import javax.swing.SwingWorker;
 public class Login extends javax.swing.JFrame {
 
     private Connection conn;
-    
+
     public Login() {
         initComponents();
         conn = Koneksi.getConnection();
@@ -243,11 +243,11 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_lb_forgotPasswordMouseClicked
 
     private void tf_emailKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tf_emailKeyTyped
-         // TODO add your handling code here:
+        // TODO add your handling code here:
     }//GEN-LAST:event_tf_emailKeyTyped
 
     private void bt_loginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bt_loginActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_bt_loginActionPerformed
 
     /**
@@ -256,7 +256,7 @@ public class Login extends javax.swing.JFrame {
     public static void main(String args[]) {
         FlatLightLaf.setup();
         //FlatDarkLaf.setup();
-        
+
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Login().setVisible(true);
@@ -286,63 +286,63 @@ public class Login extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     private void setActionButton() {
-        lb_showPassword.addMouseListener(new MouseAdapter(){
+        lb_showPassword.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e){
+            public void mouseClicked(MouseEvent e) {
                 lb_showPassword.setVisible(false);
                 lb_hidePassword.setVisible(true);
-                tf_password.setEchoChar((char)0);
+                tf_password.setEchoChar((char) 0);
             }
         });
-        
-        lb_hidePassword.addMouseListener(new MouseAdapter(){
+
+        lb_hidePassword.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e){
+            public void mouseClicked(MouseEvent e) {
                 lb_showPassword.setVisible(true);
                 lb_hidePassword.setVisible(false);
                 tf_password.setEchoChar('•');
             }
         });
-        
-        bt_login.addMouseListener(new MouseAdapter(){
+
+        bt_login.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 prosesLogin();
             }
         });
-        
-        tf_password.addKeyListener(new KeyAdapter(){
+
+        tf_password.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode() == KeyEvent.VK_ENTER){
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     bt_login.doClick();
                 }
             }
         });
-    }    
-    
-    private boolean validasiInput(){
+    }
+
+    private boolean validasiInput() {
         boolean valid = false;
-        if(tf_email.getText().trim().isEmpty()){
-            JOptionPane.showMessageDialog(this,"Email tidak boleh kosong");
-        }else if(tf_password.getText().trim().isEmpty()){
-            JOptionPane.showMessageDialog(this,"Password tidak boleh kosong");
-        }else{
+        if (tf_email.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Email tidak boleh kosong");
+        } else if (tf_password.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Password tidak boleh kosong");
+        } else {
             valid = true;
-        }    
+        }
         return valid;
     }
-    
-    private boolean checkLogin(String email, String password){
-        if(conn != null){
+
+    private boolean checkLogin(String email, String password) {
+        if (conn != null) {
             try {
                 String sql = "SELECT * FROM user WHERE email=? AND password=?";
                 PreparedStatement st = conn.prepareStatement(sql);
                 st.setString(1, email);
                 st.setString(2, password);
-                
+
                 ResultSet rs = st.executeQuery();
-                if(rs.next()){
+                if (rs.next()) {
                     return true;
                 }
             } catch (SQLException e) {
@@ -351,22 +351,50 @@ public class Login extends javax.swing.JFrame {
         }
         return false;
     }
-    
-    private void prosesLogin(){
-        if(validasiInput()){
+
+    private void prosesLogin() {
+        if (validasiInput()) {
             String email = tf_email.getText();
             String password = new String(tf_password.getPassword());
-            
-            if(checkLogin(email, password)){
-                MenuUtama mn = new MenuUtama();
-                mn.setVisible(true);
-                mn.revalidate();
-                
-                dispose();
-            }else{
-                JOptionPane.showMessageDialog(this, "Email dan Password Salah",
-                        "Pesan", JOptionPane.INFORMATION_MESSAGE);
+
+            if (checkLogin(email, password)) {
+                try {
+                    String sql = "SELECT level FROM user WHERE email=? AND password=?";
+                    PreparedStatement st = conn.prepareStatement(sql);
+                    st.setString(1, email);
+                    st.setString(2, password);
+
+                    ResultSet rs = st.executeQuery();
+                    if (rs.next()) {
+                        String level = rs.getString("level");
+
+                        switch (level) {
+                            case "Kasir":
+                                MenuUtamaKasir mnk = new MenuUtamaKasir();
+                                mnk.setVisible(true);
+                                this.setVisible(false);
+                                JOptionPane.showMessageDialog(this, "Selamat datang, Kasir!");
+                                break;
+
+                            case "Admin":
+                                MenuUtama mn = new MenuUtama();
+                                mn.setVisible(true);
+                                this.setVisible(false);
+                                JOptionPane.showMessageDialog(this, "Selamat datang, Owner!");
+                                break;
+
+                            default:
+                                JOptionPane.showMessageDialog(this, "Level tidak dikenal.");
+                                break;
+                        }
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Email atau Password salah!");
             }
         }
     }
+
 }
