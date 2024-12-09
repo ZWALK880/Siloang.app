@@ -15,6 +15,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.chart.plot.CategoryPlot;
 
 public class grafikDashboard extends javax.swing.JFrame {
  private Connection conn;
@@ -28,28 +29,28 @@ public class grafikDashboard extends javax.swing.JFrame {
     private void updateChart(String filter) {
     DefaultCategoryDataset dataset = createDataset(filter);
     JFreeChart chart = createChart(dataset);
-    ChartPanel cPanel = new ChartPanel(chart);
-    cPanel.setPreferredSize(new Dimension(panelChart.getWidth(), panelChart.getHeight()));
 
+    // Animate chart drawing
+    ChartPanel chartPanel = new ChartPanel(chart);
+    chartPanel.setPreferredSize(new Dimension(panelChart.getWidth(), panelChart.getHeight()));
     panelChart.removeAll();
     panelChart.setLayout(new java.awt.BorderLayout());
-    panelChart.add(cPanel, java.awt.BorderLayout.CENTER);
-    
-    panelChart.revalidate(); 
-    panelChart.repaint();    
+    panelChart.add(chartPanel, java.awt.BorderLayout.CENTER);
+    panelChart.revalidate();
+    panelChart.repaint();  
 }
         private DefaultCategoryDataset createDataset(String filter){
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
         try {
-            String query = "SELECT tanggal_transaksi, SUM(jumlah) AS total FROM transaksi ";
+            String query = "SELECT tanggal_transaksi, SUM(total_harga) AS total FROM transaksi ";
 
             if ("Mingguan".equals(filter)) {
-               query = "SELECT tanggal_transaksi, SUM(jumlah) AS total FROM transaksi WHERE tanggal_transaksi BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE() GROUP BY tanggal_transaksi ORDER BY `transaksi`.`tanggal_transaksi` ASC;";
+               query = "SELECT tanggal_transaksi, SUM(total_harga) AS total FROM transaksi WHERE tanggal_transaksi BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE() GROUP BY tanggal_transaksi ORDER BY `transaksi`.`tanggal_transaksi` ASC;";
            } else if ("Bulanan".equals(filter)) {
-               query = "SELECT MIN(tanggal_transaksi) AS tanggal_awal_periode, MAX(tanggal_transaksi) AS tanggal_transaksi, SUM(jumlah) AS total FROM transaksi WHERE MONTH(tanggal_transaksi) = MONTH(CURDATE()) AND YEAR(tanggal_transaksi) = YEAR(CURDATE()) GROUP BY (DAY(tanggal_transaksi) - 1) DIV 6 ORDER BY tanggal_awal_periode ASC;";
+               query = "SELECT MIN(tanggal_transaksi) AS tanggal_awal_periode, MAX(tanggal_transaksi) AS tanggal_transaksi, SUM(total_harga) AS total FROM transaksi WHERE MONTH(tanggal_transaksi) = MONTH(CURDATE()) AND YEAR(tanggal_transaksi) = YEAR(CURDATE()) GROUP BY (DAY(tanggal_transaksi) - 1) DIV 6 ORDER BY tanggal_awal_periode ASC;";
            } else if ("Tahunan".equals(filter)) {
-               query = "SELECT DATE_FORMAT(tanggal_transaksi, '%Y-%m') AS bulan, MIN(tanggal_transaksi) AS tanggal_transaksi, SUM(jumlah) AS total FROM transaksi WHERE YEAR(tanggal_transaksi) = YEAR(CURRENT_DATE()) GROUP BY DATE_FORMAT(tanggal_transaksi, '%Y-%m') ORDER BY bulan ASC;";
+               query = "SELECT DATE_FORMAT(tanggal_transaksi, '%Y-%m') AS bulan, MIN(tanggal_transaksi) AS tanggal_transaksi, SUM(total_harga) AS total FROM transaksi WHERE YEAR(tanggal_transaksi) = YEAR(CURRENT_DATE()) GROUP BY DATE_FORMAT(tanggal_transaksi, '%Y-%m') ORDER BY bulan ASC;";
            }
 
             PreparedStatement pst = conn.prepareStatement(query);
@@ -63,6 +64,7 @@ public class grafikDashboard extends javax.swing.JFrame {
 
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error saat mengambil data dari database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        
         }
 
         return dataset;
@@ -72,9 +74,40 @@ public class grafikDashboard extends javax.swing.JFrame {
         JFreeChart LineChart = ChartFactory.createLineChart(
                 "Data Penjualan", 
                 "Tanggal", 
-                "Jumlah Penjualan", 
-                dataset);
-        return LineChart;
+                "Jumlah pendapatan", 
+            dataset);
+
+    org.jfree.chart.StandardChartTheme theme = new org.jfree.chart.StandardChartTheme("JFree");
+    theme.setExtraLargeFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 16));
+    theme.setLargeFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 12));
+    theme.setRegularFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
+    theme.apply(LineChart);
+
+    CategoryPlot plot = LineChart.getCategoryPlot();
+    org.jfree.chart.renderer.category.LineAndShapeRenderer renderer = new org.jfree.chart.renderer.category.LineAndShapeRenderer();
+
+    renderer.setSeriesPaint(0, java.awt.Color.BLUE);
+    renderer.setSeriesStroke(0, new java.awt.BasicStroke(2.0f));
+    renderer.setSeriesShapesVisible(0, true);
+    renderer.setSeriesShape(0, new java.awt.geom.Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0));
+    
+    plot.setRenderer(renderer);
+    plot.setBackgroundPaint(java.awt.Color.WHITE);
+    plot.setRangeGridlinePaint(java.awt.Color.GRAY);
+    plot.setDomainGridlinePaint(java.awt.Color.GRAY);
+    plot.setOutlineVisible(false);
+
+    // Use a custom NumberFormat to format the y-axis as currency
+    java.text.NumberFormat currencyFormat = java.text.NumberFormat.getCurrencyInstance();
+    currencyFormat.setCurrency(java.util.Currency.getInstance("IDR"));
+
+    // Set the tick label formatter for the y-axis
+    org.jfree.chart.axis.NumberAxis yAxis = (org.jfree.chart.axis.NumberAxis) plot.getRangeAxis();
+    yAxis.setNumberFormatOverride(currencyFormat);
+
+    return LineChart;
+
+
     }
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
