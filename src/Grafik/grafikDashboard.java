@@ -6,6 +6,8 @@ package Grafik;
 
 import Config.Koneksi;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,18 +28,49 @@ public class grafikDashboard extends javax.swing.JFrame {
         updateChart("Mingguan");
     }
 
-    private void updateChart(String filter) {
-    DefaultCategoryDataset dataset = createDataset(filter);
-    JFreeChart chart = createChart(dataset);
+        private void updateChart(String filter) {
+        DefaultCategoryDataset dataset = createDataset(filter);
 
-    // Animate chart drawing
-    ChartPanel chartPanel = new ChartPanel(chart);
-    chartPanel.setPreferredSize(new Dimension(panelChart.getWidth(), panelChart.getHeight()));
-    panelChart.removeAll();
-    panelChart.setLayout(new java.awt.BorderLayout());
-    panelChart.add(chartPanel, java.awt.BorderLayout.CENTER);
-    panelChart.revalidate();
-    panelChart.repaint();  
+        // Menampilkan grafik kosong sementara
+        DefaultCategoryDataset emptyDataset = new DefaultCategoryDataset();
+        JFreeChart chart = createChart(emptyDataset);  // Gunakan dataset kosong dulu
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(panelChart.getWidth(), panelChart.getHeight()));
+        panelChart.removeAll();
+        panelChart.setLayout(new java.awt.BorderLayout());
+        panelChart.add(chartPanel, java.awt.BorderLayout.CENTER);
+        panelChart.revalidate();
+        panelChart.repaint();
+
+        // Mulai animasi untuk menambahkan data
+        animateChartLine(dataset, chartPanel);
+
+        }
+    
+    private void animateChartLine(DefaultCategoryDataset dataset, ChartPanel chartPanel) {
+        javax.swing.Timer timer = new javax.swing.Timer(150, new ActionListener() {
+        int currentIndex = 0;
+        DefaultCategoryDataset animatedDataset = new DefaultCategoryDataset();  // Dataset animasi kosong
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (currentIndex < dataset.getColumnCount()) {
+                // Ambil data satu per satu dari dataset asli
+                String category = (String) dataset.getColumnKey(currentIndex);
+                Number value = dataset.getValue(0, currentIndex);
+                animatedDataset.addValue(value, "Penjualan", category);
+
+                // Update chart dengan dataset animasi
+                chartPanel.getChart().getCategoryPlot().setDataset(animatedDataset);
+                currentIndex++;
+            } else {
+                // Setelah animasi selesai, set dataset penuh ke grafik
+                ((javax.swing.Timer) e.getSource()).stop();  // Stop timer
+                chartPanel.getChart().getCategoryPlot().setDataset(dataset);  // Set dataset penuh
+            }
+        }
+    });
+    timer.start();  // Mulai timer untuk animasi
 }
         private DefaultCategoryDataset createDataset(String filter){
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
@@ -97,13 +130,23 @@ public class grafikDashboard extends javax.swing.JFrame {
     plot.setDomainGridlinePaint(java.awt.Color.GRAY);
     plot.setOutlineVisible(false);
 
-    // Use a custom NumberFormat to format the y-axis as currency
-    java.text.NumberFormat currencyFormat = java.text.NumberFormat.getCurrencyInstance();
-    currencyFormat.setCurrency(java.util.Currency.getInstance("IDR"));
+    // Membuat DecimalFormatSymbols untuk mengatur simbol Rupiah
+    java.text.DecimalFormatSymbols formatSymbols = new java.text.DecimalFormatSymbols();
+    formatSymbols.setCurrencySymbol("Rp."); // Menambahkan "Rp." dengan titik
+    formatSymbols.setGroupingSeparator('.'); // Pemisah ribuan menggunakan titik
+    formatSymbols.setDecimalSeparator(','); // Pemisah desimal menggunakan koma
 
-    // Set the tick label formatter for the y-axis
+    // Membuat DecimalFormat dengan pola yang valid
+    java.text.DecimalFormat rupiahFormat = new java.text.DecimalFormat("#,##0.##", formatSymbols); // Pola tanpa simbol mata uang
+
+    // Menambahkan simbol mata uang secara manual di depan nilai format
+    rupiahFormat.setPositivePrefix("Rp.");
+    rupiahFormat.setNegativePrefix("-Rp."); // Untuk nilai negatif (opsional)
+
+    // Mengatur formatter pada sumbu y
     org.jfree.chart.axis.NumberAxis yAxis = (org.jfree.chart.axis.NumberAxis) plot.getRangeAxis();
-    yAxis.setNumberFormatOverride(currencyFormat);
+    yAxis.setNumberFormatOverride(rupiahFormat); // Terapkan format ke sumbu y
+
 
     return LineChart;
 
@@ -114,7 +157,6 @@ public class grafikDashboard extends javax.swing.JFrame {
 
         panelChart = new javax.swing.JPanel();
         waktu = new javax.swing.JComboBox<>();
-        jComboBox1 = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -136,16 +178,12 @@ public class grafikDashboard extends javax.swing.JFrame {
             }
         });
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(waktu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(17, 17, 17))
             .addGroup(layout.createSequentialGroup()
@@ -157,9 +195,7 @@ public class grafikDashboard extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGap(8, 8, 8)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(waktu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(waktu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(panelChart, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -213,7 +249,6 @@ public class grafikDashboard extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JPanel panelChart;
     private javax.swing.JComboBox<String> waktu;
     // End of variables declaration//GEN-END:variables
