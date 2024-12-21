@@ -1,6 +1,6 @@
 # Siloang ✨
 
-![Logo Siloang](https://github.com/ZWALK880/Siloang.app/blob/main/src/img/bg_formSiloang.png)
+![Logo Siloang](https://github.com/ZWALK880/Siloang.app/blob/main/src/img/bg_siloang.png)
 
 Siloang adalah aplikasi berbasis Java yang dirancang untuk membantu pengelolaan kasir galon dengan mudah dan efisien. Aplikasi ini menggunakan MySQL sebagai basis data untuk menyimpan semua informasi transaksi dan data pelanggan.
 
@@ -52,14 +52,10 @@ Kami menerima kontribusi dari siapa pun yang ingin meningkatkan aplikasi ini. Be
 - **Khairul Basahri** (E41241081) - [ZWALK880](https://github.com/ZWALK880)
 - **Hilmi Madani** (E41241083) - [hlmmdn](https://github.com/hlmmdn)
 
-## Lisensi 🔒
-
-Aplikasi ini dilisensikan di bawah [MIT License](LICENSE).
-
 ## Kontak 📧
 
 Jika Anda memiliki pertanyaan atau saran, silakan hubungi:
 
-- **Email**: [emailanda@example.com](mailto\:emailanda@example.com) 📧
-- **GitHub**: [username](https://github.com/username) 🔗
+- **Email**: [siloang.id@gmail.com](mailto\:siloang.id@gmail.com) 📧
+- **GitHub**: [ZAKY05](https://github.com/ZAKY05) 🔗
 
