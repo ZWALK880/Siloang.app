@@ -50,4 +50,5 @@ Aplikasi ini dilisensikan di bawah [MIT License](LICENSE).
 
 Jika Anda memiliki pertanyaan atau saran, silakan hubungi:
 - **GitHub**: [KAHIRUL BASHARI (E41241081)](https://github.com/ZWALK880)
+-             [FAIQ (nim)](https://github.com/albaihaqee)
 
